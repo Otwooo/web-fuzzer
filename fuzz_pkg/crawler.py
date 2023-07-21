@@ -128,7 +128,7 @@ def save(page, target):
 
 
 def search(target, cookie=None, t=60):
-    desired_time = time
+    desired_time = t
     global attack_domain, attack_path, search_page, driver    
 
     target = pre_url(target)
