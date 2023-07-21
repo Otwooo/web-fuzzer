@@ -14,7 +14,7 @@ warnings.filterwarnings('ignore')
 
 options = webdriver.ChromeOptions()
 options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36")
-options.add_argument('headless') # 화면 안 보이게
+# options.add_argument('headless') # 화면 안 보이게
 driver = webdriver.Chrome(service= Service(ChromeDriverManager().install()), options=options)
 
 attack_domain = ""
@@ -75,7 +75,6 @@ def split_url_query(url):
 
 def show_info(queue, search_page):
     print("===="*20)
-    print("queue :", queue)
     print('sub_page', search_page)
     print("===="*20)
 
@@ -85,25 +84,20 @@ def find_form_tag(now, text, queue):
         method = form.get("method")
         
         if action == None or method == None: continue
-        url = now+action                 
+        url = now+action    
 
-        param_li = []
+        if url not in search_page:
+            search_page[url] = [set(), set()] 
+            queue.append(url)                        
+        
         for input_tag in form.find_all("input"):
             param = input_tag.get("name")   
             if param == None: continue                          
             
-            param_li.append(param)            
-        
-        if url not in search_page:
-            search_page[url] = [set(), set()] 
-            q_url = url + '?'
-            for param in param_li:
-                if method == 'get':
+            if method == 'get':
                     search_page[url][0].update([param])
-                elif method == 'post':
-                    search_page[url][1].update([param])  
-                q_url += param + '=temp&'
-            queue.append(q_url)
+            elif method == 'post':
+                search_page[url][1].update([param])                        
 
 def search(target, cookie=None):
     global attack_domain, attack_path, search_page
@@ -125,7 +119,12 @@ def search(target, cookie=None):
         now = queue[0]
         queue.pop(0)
 
-        html_text = crawling(now) # 셀레리움으로 html 코드 크롤링
+        # 가끔 에러가 발생해서 에러가 발생하면 그냥 넘어가도록
+        try:
+            html_text = crawling(now) # 셀레리움으로 html 코드 크롤링
+        except:
+            print(f"error with {now}")
+            continue
 
         find_form_tag(now, html_text, queue)        
         sub_page = find_sub_page(now, html_text) # 배열로 모든 a태그 내 하위 페이지 반환
@@ -142,13 +141,8 @@ def search(target, cookie=None):
 
 if __name__ == '__main__':
     attack_url = 'http://localhost:8888/wordpress/'
-    attack_url = 'http://localhost:8888/'
+    attack_url = 'https://www.naver.com/'
     
-    search(attack_url)
+    # search(attack_url)
 
-    # attack_domain = "localhost:8888"    
-    # print(pre_href('http://localhost:8888/wordpress', '/dd'))
-    # print(pre_href('http://localhost:8888/wordpress', 'dd.html'))
-    # print(pre_href('http://localhost:8888/wordpress/test.html', 'dd.html'))
-
-    # split_url_query('http://localhost:8888/wordpress/?p=1&a=3')
+    crawling('https://www.naver.comhttps//search.naver.com/search.naver')
