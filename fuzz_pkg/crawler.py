@@ -16,7 +16,7 @@ import csv
 
 options = webdriver.ChromeOptions()
 options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36")
-options.add_argument('headless') # 화면 안 보이게
+# options.add_argument('headless') # 화면 안 보이게
 driver = webdriver.Chrome(service= Service(ChromeDriverManager().install()), options=options)
 
 attack_domain = ""
@@ -32,13 +32,17 @@ def pre_url(url): # 모든 url는 마지막에 / 가 안오도록
 
     return url
 
-def crawling(url):    
-    driver.get(url)    
+def crawling(url, cookie=None):    
+    driver.get(url)
+    if cookie != None:
+        driver.add_cookie(cookie)
     time.sleep(1)
     soup = BeautifulSoup(driver.page_source)
     return soup
 
 def pre_href(now, url):
+    if len(url) == 0:
+        return now
 
     if url[0] == '?':
         return now + url
@@ -110,7 +114,8 @@ def find_form_tag(now, text, queue):
                 search_page[pre_url(url)][1].update([param])
 
 def save(page, target):
-    with open('data.csv', 'w', newline='') as file:
+    name = urlparse(target).netloc.replace('.', '')
+    with open(f'./data/{name}.csv', 'w', newline='') as file:
         fieldnames = ['url', 'get_method', 'post_method']
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
@@ -122,7 +127,7 @@ def save(page, target):
 
 
 def search(target, cookie=None, desired_time=60):
-    global attack_domain, attack_path, search_page
+    global attack_domain, attack_path, search_page, driver    
 
     target = pre_url(target)
 
@@ -144,11 +149,11 @@ def search(target, cookie=None, desired_time=60):
         queue.pop(0)
 
         # 가끔 에러가 발생해서 에러가 발생하면 그냥 넘어가도록
-        try:
-            html_text = crawling(now) # 셀레리움으로 html 코드 크롤링
-        except:
-            print(f"error with {now}")
-            continue
+        # try:
+        html_text = crawling(now, cookie) # 셀레리움으로 html 코드 크롤링
+        # except:
+            # print(f"error with {now}")
+            # continue
 
         find_form_tag(now, html_text, queue) # from 태그를 파싱해서 새로운 주소라면 큐랑 데이터에 추가해주고 쿼리도 모두 추가        
         sub_page = find_sub_page(now, html_text) # 배열로 모든 a태그 내 하위 페이지 반환
@@ -163,7 +168,8 @@ def search(target, cookie=None, desired_time=60):
                 search_page[pre_url(pre_page)] = [set(), set()]
             search_page[pre_url(pre_page)][0].update(query)
 
-        if time.time() - start_time >= desired_time:            
+        if time.time() - start_time >= desired_time:
+            print(f'{desired_time}seconds have passed. -> break') 
             break
 
     show_info(queue, search_page)
@@ -172,6 +178,10 @@ def search(target, cookie=None, desired_time=60):
 
 if __name__ == '__main__':
     attack_url = 'http://localhost:8888/wordpress/'    
-    search(attack_url)    
+    attack_url = 'https://www.google.com/'
+    # search(attack_url)
+
+    attack_url = 'http://localhost:8888/wordpress/wp-admin/'
+    search(attack_url, {'name':'wordpress_2b7738476b2cfaf3b5454b1e89821e63', 'value':'admin%7C1690131873%7CmBcFL64SqW4eLKcvCasHEZNVUn2UR5tSlMbXXp0aR0Q%7C4b1cd784c4ad1a212df11ec2c978eb6afb2e2dafb62a4fde6a4dc45d51d39068'})
 
     # 쿼리가 달라지거나 추가된다고 모두 탐색하지 않음 이걸 추가해야하나? 귀찮은데
