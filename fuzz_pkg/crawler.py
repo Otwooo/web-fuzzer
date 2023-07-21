@@ -16,7 +16,7 @@ import csv
 
 options = webdriver.ChromeOptions()
 options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36")
-# options.add_argument('headless') # 화면 안 보이게
+options.add_argument('headless') # 화면 안 보이게
 driver = webdriver.Chrome(service= Service(ChromeDriverManager().install()), options=options)
 
 attack_domain = ""
@@ -114,19 +114,21 @@ def find_form_tag(now, text, queue):
                 search_page[pre_url(url)][1].update([param])
 
 def save(page, target):
-    name = urlparse(target).netloc.replace('.', '')
+    name = urlparse(target).netloc.replace('.', '') + urlparse(target).path.replace('.', '')
+    name = name.replace('/', '')
     with open(f'./data/{name}.csv', 'w', newline='') as file:
         fieldnames = ['url', 'get_method', 'post_method']
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
 
         for url in page:
-            get_method = ', '.join(get_param for get_params in page[url][0] for get_param in get_params)
-            post_method = ', '.join(post_param for post_params in page[url][1] for post_param in post_params)
+            get_method = ', '.join(get_params for get_params in page[url][0] )
+            post_method = ', '.join(post_params for post_params in page[url][1])
             writer.writerow({'url': url, 'get_method': get_method, 'post_method': post_method})
 
 
-def search(target, cookie=None, desired_time=60):
+def search(target, cookie=None, t=60):
+    desired_time = time
     global attack_domain, attack_path, search_page, driver    
 
     target = pre_url(target)
@@ -178,9 +180,10 @@ def search(target, cookie=None, desired_time=60):
 
 if __name__ == '__main__':
     attack_url = 'http://localhost:8888/wordpress/'        
-    # search(attack_url)
+    attack_url = 'https://www.hackthissite.org/'
+    search(attack_url, t=180)
 
-    attack_url = 'http://localhost:8888/wordpress/wp-admin/'
-    search(attack_url, {'name':'wordpress_2b7738476b2cfaf3b5454b1e89821e63', 'value':'admin%7C1690131873%7CmBcFL64SqW4eLKcvCasHEZNVUn2UR5tSlMbXXp0aR0Q%7C4b1cd784c4ad1a212df11ec2c978eb6afb2e2dafb62a4fde6a4dc45d51d39068'})
+    # attack_url = 'http://localhost:8888/wordpress/wp-admin/'
+    # search(attack_url, {'name':'wordpress_2b7738476b2cfaf3b5454b1e89821e63', 'value':'admin%7C1690131873%7CmBcFL64SqW4eLKcvCasHEZNVUn2UR5tSlMbXXp0aR0Q%7C4b1cd784c4ad1a212df11ec2c978eb6afb2e2dafb62a4fde6a4dc45d51d39068'}, 180)
 
     # 쿼리가 달라지거나 추가된다고 모두 탐색하지 않음 이걸 추가해야하나? 귀찮은데
