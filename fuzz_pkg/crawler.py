@@ -177,8 +177,7 @@ def search(target, cookie=None, desired_time=60):
 
 
 if __name__ == '__main__':
-    attack_url = 'http://localhost:8888/wordpress/'    
-    attack_url = 'https://www.google.com/'
+    attack_url = 'http://localhost:8888/wordpress/'        
     # search(attack_url)
 
     attack_url = 'http://localhost:8888/wordpress/wp-admin/'
