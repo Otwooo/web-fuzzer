@@ -62,7 +62,7 @@ def pre_href(now, url):
 def find_sub_page(now, text):
     sub_page = []
 
-    for link in text.find_all('a'):
+    for link in text.find_all('a'):        
         href = link.get('href')
 
         if href == None or len(href) == 0 or href[0] == '#': continue # url이 #이거나 없으면 패스
@@ -87,30 +87,33 @@ def split_url_query(url):
     return pre_url(url), query
 
 def show_info(queue, search_page):
-    print("===="*20)
-    print('sub_page', search_page)
-    # print('queue :', queue)
-    print("===="*20)
+    pass
+    # print("===="*20)
+    # print('search_page', search_page)
+    # # print('queue :', queue)
+    # print("===="*20)
 
-def find_form_tag(now, text, queue):
-    for form in text.find_all("form"):
+def find_form_tag(now, text, queue):    
+    for form in text.find_all("form"):             
         action = form.get("action")
         method = form.get("method")
         
-        if action == None or method == None: continue
+        if method == None: continue
+
+        if action == None: action = ""
         url = pre_href(now, action)
 
         if pre_url(url) not in search_page:
             search_page[pre_url(url)] = [set(), set()] 
             queue.append(pre_url(url))
-                
+         
         for input_tag in form.find_all("input"):
-            param = input_tag.get("name")   
+            param = input_tag.get("name")               
             if param == None: continue                          
             
-            if method == 'get':
+            if method == 'get' or method == 'GET':
                     search_page[pre_url(url)][0].update([param])
-            elif method == 'post':
+            elif method == 'post' or method == 'POST':
                 search_page[pre_url(url)][1].update([param])
 
 def save(page, target):
@@ -135,9 +138,13 @@ def search(target, cookie=None, t=60):
 
     attack_domain = urlparse(target).netloc
     attack_path = urlparse(target).path
-        
+    print("")        
+    print("__________________________________________________")
+    print("")    
     print("attack_domain :", attack_domain)
-    print("attack_path :", attack_path, "\n")
+    print("attack_path :", attack_path)
+    print("__________________________________________________")
+    print("")
 
     search_page[pre_url(target)] = [set(), set()]
     queue = [target]
@@ -151,15 +158,15 @@ def search(target, cookie=None, t=60):
         queue.pop(0)
 
         # 가끔 에러가 발생해서 에러가 발생하면 그냥 넘어가도록
-        # try:
-        html_text = crawling(now, cookie) # 셀레리움으로 html 코드 크롤링
-        # except:
-            # print(f"error with {now}")
-            # continue
+        try:
+            html_text = crawling(now, cookie) # 셀레리움으로 html 코드 크롤링
+        except:
+            print(f"error with {now}")
+            continue
 
         find_form_tag(now, html_text, queue) # from 태그를 파싱해서 새로운 주소라면 큐랑 데이터에 추가해주고 쿼리도 모두 추가        
-        sub_page = find_sub_page(now, html_text) # 배열로 모든 a태그 내 하위 페이지 반환
-                
+        sub_page = find_sub_page(now, html_text) # 배열로 모든 a태그 내 하위 페이지 반환           
+
         for page in sub_page:
             pre_page, query = split_url_query(page) # 링크와 쿼리 분류, 쿼리는 배열 형태로 반환
 
@@ -179,11 +186,10 @@ def search(target, cookie=None, t=60):
 
 
 if __name__ == '__main__':
-    attack_url = 'http://localhost:8888/wordpress/'        
-    attack_url = 'https://www.hackthissite.org/'
-    search(attack_url, t=180)
+    # attack_url = 'http://localhost:8888/wordpress/'            
+    # search(attack_url, t=180)
 
-    # attack_url = 'http://localhost:8888/wordpress/wp-admin/'
-    # search(attack_url, {'name':'wordpress_2b7738476b2cfaf3b5454b1e89821e63', 'value':'admin%7C1690131873%7CmBcFL64SqW4eLKcvCasHEZNVUn2UR5tSlMbXXp0aR0Q%7C4b1cd784c4ad1a212df11ec2c978eb6afb2e2dafb62a4fde6a4dc45d51d39068'}, 180)
+    attack_url = 'http://localhost:8888/wordpress/wp-admin/'
+    search(attack_url, t=180, cookie={'name':'wordpress_2b7738476b2cfaf3b5454b1e89821e63', 'value':'admin%7C1690276028%7CL5iOx4OLHBCxsvYMoUF7Hl8OVRtBYHnv2oGd382LHpg%7C56826ade9197452d09ab74e0bac867ea57a2d6dfed4e4e8d8e70e44b7c7500a4'})
 
     # 쿼리가 달라지거나 추가된다고 모두 탐색하지 않음 이걸 추가해야하나? 귀찮은데

