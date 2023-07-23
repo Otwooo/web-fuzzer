@@ -178,7 +178,7 @@ def search(target, cookie=None, t=60):
             search_page[pre_url(pre_page)][0].update(query)
 
         if time.time() - start_time >= desired_time:
-            print(f'{desired_time}seconds have passed. -> break') 
+            print(f'{desired_time}seconds have passed. -> crawling break') 
             break
 
     show_info(queue, search_page)

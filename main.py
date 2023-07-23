@@ -5,7 +5,9 @@ from fuzz_pkg.worker import worker_GET
 import sys
 
 if len(sys.argv) < 3:   
+    print("\n")
     print("main.py {attack_url} {attack_type} {attack_time=60} 형식으로 입력해주세요")
+    print("\n")
 
 attack_url = sys.argv[1]
 attack_type = sys.argv[2]
